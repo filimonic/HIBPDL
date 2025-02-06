@@ -5,12 +5,11 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"path"
 	"strings"
 	"sync"
 	"time"
 
-	"github.com/schollz/progressbar/v3"
+	"github.com/cheggaaa/pb/v3"
 )
 
 const apiEndpoint = "https://api.pwnedpasswords.com/range/%s%s"
@@ -24,7 +23,7 @@ type hibpDownloader struct {
 	data         chan []byte
 	quit         chan bool
 	progress_max uint64
-	progress_bar *progressbar.ProgressBar
+	progress_bar *pb.ProgressBar
 }
 
 func Download(file string, parallelism uint64, overwrite bool, ntlm bool, showProgress bool) {
@@ -60,19 +59,9 @@ func Download(file string, parallelism uint64, overwrite bool, ntlm bool, showPr
 	fmt.Printf("Donwloading %s hashes with %d workers\n\n", hashType, hd.n_workers)
 
 	if showProgress {
-		desc := fmt.Sprintf("%s (%s)", path.Base(hd.file), hashType)
-		hd.progress_bar = progressbar.NewOptions64(
-			int64(hd.progress_max),
-			progressbar.OptionSetTheme(progressbar.ThemeASCII),
-			progressbar.OptionSetDescription(desc),
-			progressbar.OptionEnableColorCodes(true),
-			progressbar.OptionSetPredictTime(true),
-			progressbar.OptionSetItsString("pcs"),
-			progressbar.OptionSetElapsedTime(true),
-			progressbar.OptionShowCount(),
-			progressbar.OptionShowElapsedTimeOnFinish(),
-			progressbar.OptionShowIts(),
-			progressbar.OptionThrottle(time.Second*5))
+		hd.progress_bar = pb.Start64(int64(hd.progress_max))
+		hd.progress_bar.SetRefreshRate(time.Second * 5)
+		hd.progress_bar.SetTemplate(pb.Full)
 	}
 
 	var ww sync.WaitGroup
@@ -161,7 +150,7 @@ func (hd *hibpDownloader) writer(data chan []byte, quit chan bool) {
 				panic(err)
 			}
 
-			hd.progress_bar.Add64(1)
+			hd.progress_bar.Increment()
 		case <-quit:
 			return
 		}

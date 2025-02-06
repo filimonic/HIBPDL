@@ -57,9 +57,7 @@ func Download(file string, parallelism uint64, overwrite bool, ntlm bool, showPr
 		hashType += "SHA1"
 	}
 
-	if hd.ntlm {
-		fmt.Printf("Donwloading %s hashes with %d workers\n", hashType, hd.n_workers)
-	}
+	fmt.Printf("Donwloading %s hashes with %d workers\n\n", hashType, hd.n_workers)
 
 	if showProgress {
 		desc := fmt.Sprintf("%s (%s)", path.Base(hd.file), hashType)
